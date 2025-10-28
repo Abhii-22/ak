@@ -1,0 +1,86 @@
+.reels-container {
+  height: calc(100vh - 120px); /* Full height minus header and footer */
+  overflow-y: scroll;
+  scroll-snap-type: y mandatory;
+  background-color: #000;
+}
+
+.reel {
+  height: calc(100vh - 120px);
+  width: 100%;
+  scroll-snap-align: start;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.reel-media {
+  height: 100%;
+  width: 100%;
+  object-fit: contain;
+}
+
+.reel-actions {
+  position: absolute;
+  bottom: 20px;
+  right: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  z-index: 10;
+}
+
+.like-btn {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 30px;
+  cursor: pointer;
+  text-shadow: 0 0 5px rgba(0,0,0,0.5);
+}
+
+.like-btn.liked {
+  color: #ff4d4d;
+}
+
+.reel-actions span {
+  color: #fff;
+  font-weight: bold;
+  font-size: 14px;
+  text-shadow: 0 0 5px rgba(0,0,0,0.5);
+}
+
+.no-reels-msg {
+  color: #fff;
+  text-align: center;
+  padding-top: 50px;
+  height: 100%;
+}
+
+.reel-user-profile {
+  position: absolute;
+  bottom: 20px;
+  left: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 10;
+  color: #fff;
+  text-shadow: 0 0 5px rgba(0,0,0,0.5);
+}
+
+.reel-profile-picture {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #fff;
+}
+
+.reel-user-profile p {
+  font-weight: bold;
+  font-size: 16px;
+  margin: 0;
+}

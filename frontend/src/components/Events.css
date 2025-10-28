@@ -1,0 +1,338 @@
+/* Global Styles */
+body {
+  background: linear-gradient(120deg, #f9f9f9, #eef3f7);
+  color: #333;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  animation: fadeIn 0.8s ease-in;
+  overflow-x: hidden;
+}
+
+/* Container */
+.events-page {
+  display: flex;
+  padding: 30px;
+  gap: 40px;
+  animation: slideUp 0.8s ease-in-out;
+}
+
+/* Section Titles */
+.events-page h1 {
+  font-size: 2.2rem;
+  color: #2c3e50;
+  margin-bottom: 20px;
+  border-bottom: 4px solid #3498db;
+  padding-bottom: 8px;
+  position: relative;
+  animation: fadeIn 1s ease-in;
+}
+
+.sport-filters {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 30px;
+}
+
+.filter-btn {
+  background-color: #fff;
+  border: 1px solid #dbdbdb;
+  border-radius: 20px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-weight: 600;
+  color: #262626;
+  transition: all 0.3s ease;
+}
+
+.filter-btn:hover {
+  background-color: #f0f0f0;
+}
+
+.filter-btn.active {
+  background-color: #0095f6;
+  color: #fff;
+  border-color: #0095f6;
+}
+
+.events-page h1::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 70px;
+  height: 4px;
+  background: linear-gradient(90deg, #3498db, #ffd700);
+  border-radius: 4px;
+}
+
+/* Layout Sections */
+.upcoming-events {
+  flex: 2;
+  padding-right: 20px;
+  border-right: 1px dashed #ccc;
+}
+
+.winners-section {
+  flex: 1.5;
+  padding-left: 20px;
+}
+
+/* Event Card */
+.event-item {
+  background: linear-gradient(135deg, #fffbe6, #fff3cd);
+  border-left: 5px solid #ffd700;
+  border-radius: 14px;
+  margin-bottom: 25px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+  transition: all 0.4s ease;
+  display: flex;
+  overflow: hidden;
+  transform: translateY(0);
+  animation: fadeInUp 0.7s ease;
+}
+
+.event-item:hover {
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+/* Poster */
+.event-poster-container {
+  flex-basis: 220px;
+  overflow: hidden;
+  border-top-left-radius: 14px;
+  border-bottom-left-radius: 14px;
+}
+
+.event-poster {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.event-item:hover .event-poster {
+  transform: scale(1.1);
+}
+
+/* Event Content */
+.event-content {
+  padding: 22px;
+  flex: 1;
+}
+
+.event-item h2 {
+  margin-top: 0;
+  color: #c5a645;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.event-item p {
+  margin: 10px 0;
+  color: #555;
+  display: flex;
+  align-items: center;
+}
+
+.event-icon {
+  margin-right: 10px;
+  color: #ffd700;
+  font-size: 1.3em;
+}
+
+/* Prize Section */
+.event-prizes {
+  margin-top: 15px;
+  padding-top: 12px;
+  border-top: 1px solid #e0c870;
+  animation: fadeIn 0.9s ease;
+}
+
+.event-prizes h4 {
+  margin-bottom: 12px;
+  color: #c5a645;
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+}
+
+.prize-list {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.prize-ribbon {
+  background: linear-gradient(145deg, #ffe680, #ffd54f);
+  color: #4e342e;
+  padding: 10px 20px;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  font-weight: 600;
+  transition: transform 0.3s ease, background 0.3s ease;
+}
+
+.prize-ribbon:hover {
+  transform: translateY(-3px);
+  background: linear-gradient(145deg, #ffd700, #ffeb3b);
+}
+
+/* Winner Card */
+.winner-card {
+  background: #fffaf0;
+  border: 2px dashed #ffd700;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 25px;
+  transition: all 0.4s ease;
+  animation: fadeInUp 0.8s ease;
+}
+
+.winner-card:hover {
+  background: #fff8e1;
+  border-color: #c5a645;
+  transform: translateY(-6px);
+}
+
+.winner-card h2 {
+  font-size: 1.3rem;
+  color: #c5a645;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Upload Form */
+.upload-form input[type="file"] {
+  border: 1px solid #ccc;
+  padding: 10px;
+  cursor: pointer;
+  border-radius: 6px;
+  background-color: #f9f9f9;
+  margin-bottom: 12px;
+  width: 100%;
+  transition: border-color 0.3s ease;
+}
+
+.upload-form input[type="file"]:hover {
+  border-color: #3498db;
+}
+
+.upload-form button {
+  background-color: #3498db;
+  color: white;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 15px;
+  width: 100%;
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.upload-form button:hover {
+  background-color: #2980b9;
+  transform: scale(1.03);
+}
+
+.winner-card .upload-form button {
+  background-color: #ffd700;
+  color: #333;
+  font-weight: bold;
+}
+
+.winner-card .upload-form button:hover {
+  background-color: #c5a645;
+  transform: scale(1.03);
+}
+
+/* Image Previews */
+.previews {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.preview-image {
+  width: 90px;
+  height: 90px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 2px solid #ddd;
+  padding: 3px;
+  transition: transform 0.3s ease;
+}
+
+.preview-image:hover {
+  transform: scale(1.1);
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(50px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sport-filters {
+    overflow-x: auto;
+    white-space: nowrap;
+    justify-content: flex-start;
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+
+  .sport-filters::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, and Opera */
+  }
+
+  .events-page {
+    flex-direction: column;
+  }
+
+  .upcoming-events {
+    border-right: none;
+    padding-right: 0;
+    margin-bottom: 20px;
+  }
+
+  .winners-section {
+    padding-left: 0;
+  }
+
+  .event-item {
+    flex-direction: column;
+  }
+
+  .event-poster-container {
+    width: 100%;
+    max-height: 250px;
+  }
+
+  .prize-list {
+    grid-template-columns: 1fr;
+  }
+
+  .events-page h1 {
+    font-size: 1.7rem;
+  }
+}
