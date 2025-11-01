@@ -5,13 +5,21 @@ import './LandingPage.css';
 const LandingPage = () => {
   return (
     <div className="landing-container">
-      <div className="landing-header">
-        <h1>Welcome to Sports Club</h1>
-        <p>Your ultimate destination for sports events and community.</p>
+      <div className="landing-left">
+        <div className="landing-content">
+          <h1>Welcome to Sports Club</h1>
+          <p>Your ultimate destination for sports events and community.</p>
+          <div className="landing-cta">
+            <Link to="/signup" className="cta-button primary">Get Started</Link>
+            <Link to="/signin" className="cta-button secondary">Sign In</Link>
+          </div>
+        </div>
       </div>
-      <div className="landing-cta">
-        <Link to="/signup" className="cta-button primary">Get Started</Link>
-        <Link to="/signin" className="cta-button secondary">Sign In</Link>
+      <div className="landing-right">
+        <video autoPlay loop muted playsInline className="landing-video">
+          <source src="https://assets.mixkit.co/videos/preview/mixkit-basketball-player-dribbling-then-running-2285-large.mp4" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
       </div>
     </div>
   );
