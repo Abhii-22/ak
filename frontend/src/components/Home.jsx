@@ -36,13 +36,13 @@ const Home = ({ showUploadForm, addEvent }) => {
               style={{ transform: `rotateY(${rotation}deg)` }}
             >
               <div className="carousel-item">
-                <img src="images/kabaddi.jpg" alt="Kabaddi" />
+                <img src="/images/kabaddi.jpg" alt="Kabaddi" />
               </div>
               <div className="carousel-item">
-                <img src="images/vollyball.png" alt="Volleyball" />
+                <img src="/images/vollyball.png" alt="Volleyball" />
               </div>
               <div className="carousel-item">
-                <img src="images/NcZXHD.jpg" alt="Cricket" />
+                <img src="/images/NcZXHD.jpg" alt="Cricket" />
               </div>
             </div>
           </div>

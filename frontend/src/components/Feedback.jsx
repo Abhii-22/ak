@@ -66,7 +66,7 @@ const Feedback = () => {
       <div className="feedback-row">
         {indexes.map((feedbackIndex, i) => (
           <TypewriterCard
-            key={feedbackIndex} // Use a more stable key
+            key={i}
             text={feedbacks[feedbackIndex].text}
             name={feedbacks[feedbackIndex].name}
           />

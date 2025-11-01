@@ -20,10 +20,7 @@ const BottomNav = () => {
       <Link to="/home" className="nav-item">
         <FaHome />
       </Link>
-      <Link to="/search" className="nav-item">
-        <FaSearch />
-      </Link>
-      <Link to="/events" className="nav-item">
+            <Link to="/events" className="nav-item">
         <FaFutbol />
       </Link>
       <Link to="/upload" className="nav-item" onClick={handleUploadClick}>

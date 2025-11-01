@@ -13,8 +13,8 @@ const Header = ({ onUploadClick }) => {
       <nav>
         <ul>
           <li><Link to="/">Home</Link></li>
-          <li><a href="/#about">About</a></li>
-                    <li><a href="/#contact">Contact</a></li>
+          <li><Link to="/home#about">About</Link></li>
+                    <li><Link to="/home#contact">Contact</Link></li>
           <li><Link to="/events">Events</Link></li>
         </ul>
       </nav>
@@ -24,7 +24,7 @@ const Header = ({ onUploadClick }) => {
             <button onClick={onUploadClick} className="btn btn-upload">Upload Event</button>
             <div className="profile-container">
               <div className="profile-icon" onClick={() => setShowProfile(!showProfile)}>
-                {currentUser.email.charAt(0).toUpperCase()}
+                {currentUser.name.charAt(0).toUpperCase()}
               </div>
               {showProfile && (
                 <div className="profile-dropdown">
