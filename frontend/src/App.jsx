@@ -21,7 +21,7 @@ const AppLayout = () => {
   const { currentUser } = useAuth();
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [events, setEvents] = useState([]);
-  const API = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001';
+  const API = 'http://localhost:5001'; // Force API URL to port 5001
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -41,12 +41,18 @@ const AppLayout = () => {
           id: post._id,
           src: `${API}${post.mediaUrl}`,
           type: post.mediaType,
-          likes: 0, // Likes are not stored in the backend yet
-          liked: false,
-          uploadedBy: {
-            name: post.user?.name || 'Unknown User',
-            email: post.user?.email || '',
-            profilePictureUrl: post.user?.profilePictureUrl || 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?q=80&w=1780&auto=format&fit=crop'
+          likes: post.likes || 0,
+          liked: currentUser && post.likedBy?.some(likedUser => 
+            likedUser._id === currentUser._id || likedUser.toString() === currentUser._id
+          ) || false,
+          uploadedBy: post.user ? {
+            name: post.user.name,
+            email: post.user.email,
+            profilePictureUrl: post.user.profilePictureUrl
+          } : {
+            name: 'Unknown User',
+            email: '',
+            profilePictureUrl: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?q=80&w=1780&auto=format&fit=crop'
           }
         }));
         setReels(transformedReels);
@@ -57,7 +63,7 @@ const AppLayout = () => {
 
     fetchEvents();
     fetchAllPosts();
-  }, [API]);
+  }, [API, currentUser]);
   const [reels, setReels] = useState([]);
 
   const addEvent = (newEvent) => {
@@ -95,13 +101,41 @@ const AppLayout = () => {
     setReels(prevReels => [newReel, ...prevReels]);
   };
 
-  const handleLike = (reelId) => {
-    setReels(reels.map(reel => {
-      if (reel.id === reelId) {
-        return { ...reel, liked: !reel.liked, likes: reel.liked ? reel.likes - 1 : reel.likes + 1 };
-      }
-      return reel;
-    }));
+  const handleLike = async (reelId) => {
+    try {
+      // Find the current reel to check if it's liked
+      const currentReel = reels.find(reel => reel.id === reelId);
+      if (!currentReel) return;
+
+      // Make API call to like/unlike
+      const endpoint = currentReel.liked ? 'unlike' : 'like';
+      const response = await axios.put(`${API}/api/posts/${reelId}/${endpoint}`, {}, {
+        headers: {
+          'x-auth-token': localStorage.getItem('token')
+        }
+      });
+
+      // Update reels state with response data
+      setReels(reels.map(reel => {
+        if (reel.id === reelId) {
+          return { 
+            ...reel, 
+            liked: response.data.liked, 
+            likes: response.data.likes 
+          };
+        }
+        return reel;
+      }));
+    } catch (error) {
+      console.error('Failed to like/unlike post:', error);
+      // Fallback to frontend-only update if API fails
+      setReels(reels.map(reel => {
+        if (reel.id === reelId) {
+          return { ...reel, liked: !reel.liked, likes: reel.liked ? reel.likes - 1 : reel.likes + 1 };
+        }
+        return reel;
+      }));
+    }
   };
   const noNavRoutes = ['/', '/signin', '/signup'];
   const shouldShowNav = !noNavRoutes.includes(location.pathname);

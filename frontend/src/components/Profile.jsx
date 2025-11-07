@@ -19,13 +19,20 @@ const Profile = () => {
     posts: 0,
     totalLikes: 0
   });
-  const API = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001';
+  const API = 'http://localhost:5001'; // Force API URL to port 5001
 
   useEffect(() => {
     const fetchPosts = async (userId) => {
       try {
         const res = await axios.get(`${API}/api/posts/user/${userId}`);
-        setPosts(res.data);
+        // Add liked status to each post
+        const postsWithLikedStatus = res.data.map(post => ({
+          ...post,
+          liked: currentUser && post.likedBy?.some(likedUser => 
+            likedUser._id === currentUser._id || likedUser.toString() === currentUser._id
+          ) || false
+        }));
+        setPosts(postsWithLikedStatus);
         // Update stats
         setStats(prev => ({
           ...prev,
@@ -33,7 +40,7 @@ const Profile = () => {
           totalLikes: res.data.reduce((acc, post) => acc + (post.likes || 0), 0)
         }));
       } catch (error) {
-        console.error('Failed to fetch posts', error);
+        console.error('Failed to load posts', error);
         setError('Failed to load posts');
       }
     };
@@ -66,20 +73,28 @@ const Profile = () => {
     const fetchPosts = async (userId) => {
       try {
         const res = await axios.get(`${API}/api/posts/user/${userId}`);
-        setPosts(res.data);
-        // Update stats
+        // Add liked status to each post
+        const postsWithLikedStatus = res.data.map(post => ({
+          ...post,
+          liked: currentUser && post.likedBy?.some(likedUser => 
+            likedUser._id === currentUser._id || likedUser.toString() === currentUser._id
+          ) || false
+        }));
+        setPosts(postsWithLikedStatus);
         setStats(prev => ({
           ...prev,
           posts: res.data.length,
           totalLikes: res.data.reduce((acc, post) => acc + (post.likes || 0), 0)
         }));
       } catch (error) {
-        console.error('Failed to fetch posts', error);
+        console.error('Failed to load posts', error);
       }
     };
-    if (profileData) {
-      fetchPosts(profileData._id);
+
+    if (currentUser) {
+      fetchPosts(currentUser._id);
     }
+    setShowUploadModal(false);
   };
 
   const handleSaveProfile = (updatedProfile) => {
@@ -93,7 +108,35 @@ const Profile = () => {
 
   const handleLikePost = async (postId) => {
     try {
-      // Simulate like functionality (you can replace with actual API call)
+      // Find current post to check if liked
+      const currentPost = posts.find(post => post._id === postId);
+      if (!currentPost) return;
+
+      // Make API call to like/unlike
+      const endpoint = currentPost.liked ? 'unlike' : 'like';
+      const response = await axios.put(`${API}/api/posts/${postId}/${endpoint}`, {}, {
+        headers: {
+          'x-auth-token': localStorage.getItem('token')
+        }
+      });
+
+      // Update posts state with response data
+      setPosts(prevPosts => 
+        prevPosts.map(post => 
+          post._id === postId 
+            ? { ...post, likes: response.data.likes, liked: response.data.liked }
+            : post
+        )
+      );
+      
+      // Update stats
+      setStats(prev => ({
+        ...prev,
+        totalLikes: prev.totalLikes + (response.data.liked ? 1 : -1)
+      }));
+    } catch (error) {
+      console.error('Failed to like post', error);
+      // Fallback to frontend-only update if API fails
       setPosts(prevPosts => 
         prevPosts.map(post => 
           post._id === postId 
@@ -112,8 +155,6 @@ const Profile = () => {
         ...prev,
         totalLikes: updatedPosts.reduce((acc, post) => acc + (post.likes || 0), 0)
       }));
-    } catch (error) {
-      console.error('Failed to like post', error);
     }
   };
 
