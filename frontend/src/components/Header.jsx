@@ -1,14 +1,23 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './Header.css';
 
 const Header = ({ onUploadClick }) => {
-  const { currentUser, signOut } = useAuth();
-  const [showProfile, setShowProfile] = useState(false);
+  const { currentUser } = useAuth();
+  const [isVisible, setIsVisible] = useState(true);
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.pathname === '/profile' || location.pathname === '/events' || location.pathname === '/reels') {
+      setIsVisible(false);
+    } else {
+      setIsVisible(true);
+    }
+  }, [location]);
 
   return (
-    <header>
+    <header className={isVisible ? 'header-visible' : 'header-hidden'}>
       <h1><Link to="/">Sports Club</Link></h1>
       <nav>
         <ul>
@@ -16,6 +25,7 @@ const Header = ({ onUploadClick }) => {
           <li><Link to="/home#about">About</Link></li>
                     <li><Link to="/home#contact">Contact</Link></li>
           <li><Link to="/events">Events</Link></li>
+          <li><Link to="/reels">Reels</Link></li>
         </ul>
       </nav>
       <div className="auth-buttons">
@@ -23,15 +33,9 @@ const Header = ({ onUploadClick }) => {
           <>
             <button onClick={onUploadClick} className="btn btn-upload">Upload Event</button>
             <div className="profile-container">
-              <div className="profile-icon" onClick={() => setShowProfile(!showProfile)}>
+              <Link to="/profile" className="profile-icon">
                 {currentUser.name.charAt(0).toUpperCase()}
-              </div>
-              {showProfile && (
-                <div className="profile-dropdown">
-                  <p>{currentUser.email}</p>
-                  <button onClick={signOut} className="btn btn-signout">Sign Out</button>
-                </div>
-              )}
+              </Link>
             </div>
           </>
         ) : (

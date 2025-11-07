@@ -10,7 +10,7 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token'));
-  const API = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+  const API = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001';
 
   useEffect(() => {
     const loadUser = async () => {

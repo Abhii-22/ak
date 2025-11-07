@@ -5,7 +5,7 @@ import './UploadEventForm.css';
 
 const UploadEventForm = ({ addEvent }) => {
   const { token } = useAuth();
-  const API = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+  const API = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001';
 
   const handleSubmit = async (e) => {
     e.preventDefault();

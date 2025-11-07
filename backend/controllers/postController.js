@@ -37,7 +37,7 @@ exports.getUserPosts = async (req, res) => {
 // Get all posts
 exports.getAllPosts = async (req, res) => {
   try {
-    const posts = await Post.find().sort({ createdAt: -1 });
+    const posts = await Post.find().populate('user', 'name email profilePictureUrl').sort({ createdAt: -1 });
     res.json(posts);
   } catch (err) {
     console.error(err.message);

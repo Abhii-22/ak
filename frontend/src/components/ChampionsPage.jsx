@@ -17,8 +17,14 @@ const ChampionsPage = ({ reels, handleLike }) => {
               <img src={reel.src} alt="Reel content" className="reel-media" />
             )}
             <div className="reel-user-profile">
-              <img src={currentUser?.profilePictureUrl || 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?q=80&w=1780&auto=format&fit=crop'} alt="User profile" className="reel-profile-picture" />
-              <p>{currentUser?.email.split('@')[0] || 'User'}</p>
+              <img 
+                src={reel.uploadedBy?.profilePictureUrl || 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?q=80&w=1780&auto=format&fit=crop'} 
+                alt={`${reel.uploadedBy?.name || 'User'} profile`} 
+                className="reel-profile-picture" 
+              />
+              <div className="reel-user-info">
+                <p className="reel-username">{reel.uploadedBy?.name || 'Unknown User'}</p>
+              </div>
             </div>
             <div className="reel-actions">
               <button onClick={() => handleLike(reel.id)} className={reel.liked ? 'like-btn liked' : 'like-btn'}>

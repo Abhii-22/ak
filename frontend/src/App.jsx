@@ -21,7 +21,7 @@ const AppLayout = () => {
   const { currentUser } = useAuth();
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [events, setEvents] = useState([]);
-  const API = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+  const API = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001';
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -43,6 +43,11 @@ const AppLayout = () => {
           type: post.mediaType,
           likes: 0, // Likes are not stored in the backend yet
           liked: false,
+          uploadedBy: {
+            name: post.user?.name || 'Unknown User',
+            email: post.user?.email || '',
+            profilePictureUrl: post.user?.profilePictureUrl || 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?q=80&w=1780&auto=format&fit=crop'
+          }
         }));
         setReels(transformedReels);
       } catch (error) {
@@ -80,7 +85,12 @@ const AppLayout = () => {
       src: newUrl,
       type: file.type,
       likes: 0,
-      liked: false
+      liked: false,
+      uploadedBy: {
+        name: currentUser?.name || 'Unknown User',
+        email: currentUser?.email || '',
+        profilePictureUrl: currentUser?.profilePictureUrl || 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?q=80&w=1780&auto=format&fit=crop'
+      }
     };
     setReels(prevReels => [newReel, ...prevReels]);
   };

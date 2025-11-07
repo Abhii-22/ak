@@ -65,22 +65,37 @@
   left: 10px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   z-index: 10;
   color: #fff;
   text-shadow: 0 0 5px rgba(0,0,0,0.5);
 }
 
 .reel-profile-picture {
-  width: 40px;
-  height: 40px;
+  width: 45px;
+  height: 45px;
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid #fff;
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
 }
 
-.reel-user-profile p {
+.reel-user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.reel-username {
   font-weight: bold;
   font-size: 16px;
   margin: 0;
+  color: #fff;
+}
+
+.reel-user-email {
+  font-size: 13px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: normal;
 }

@@ -1,34 +1,69 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaArrowLeft, FaCalendarAlt, FaMapMarkerAlt, FaListUl, FaTrophy, FaFutbol, FaBasketballBall, FaMedal, FaAward, FaCrown } from 'react-icons/fa';
+import { 
+  FaCalendarAlt, FaMapMarkerAlt, FaTrophy, 
+  FaFutbol, FaBasketballBall, FaMedal, FaAward, FaCrown, FaSearch,
+  FaFilter, FaStar, FaClock, FaFire, FaChevronRight,
+  FaTicketAlt, FaShareAlt, FaHeart, FaEye, FaBookmark,
+  FaSpinner, FaFlag, FaUsers, FaChartLine, FaBolt, FaTags,
+  FaLocationArrow, FaCalendarDay, FaInfoCircle, FaGlobe,
+  FaArrowRight, FaExpand, FaCompress, FaTh, FaList
+} from 'react-icons/fa';
 import './Events.css';
 import Modal from './Modal';
-const API = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000';
+const API = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001';
 
-const iconMap = {
-  FaFutbol: <FaFutbol />,
-  FaBasketballBall: <FaBasketballBall />,
+const sportIcons = {
+  'Kabaddi': { icon: '🤼', color: '#FF6B6B' },
+  'Cricket': { icon: '🏏', color: '#4ECDC4' },
+  'Volleyball': { icon: '🏐', color: '#45B7D1' },
+  'Tennis': { icon: '🎾', color: '#96CEB4' },
+  'Badminton': { icon: '🏸', color: '#FFEAA7' },
+  'Others': { icon: '⚡', color: '#DDA0DD' }
 };
 
-const prizeIconMap = {
-  '1st': <FaCrown className="prize-icon gold" />,
-  '2nd': <FaMedal className="prize-icon silver" />,
-  '3rd': <FaMedal className="prize-icon bronze" />,
-  '4th': <FaAward className="prize-icon" />,
-  '5th': <FaAward className="prize-icon" />,
+const prizeIcons = {
+  '1st': { icon: '👑', class: 'gold' },
+  '2nd': { icon: '🥈', class: 'silver' },
+  '3rd': { icon: '🥉', class: 'bronze' },
+  '4th': { icon: '🏆', class: 'platinum' },
+  '5th': { icon: '⭐', class: 'star' }
 };
 
 const Events = ({ events = [] }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPoster, setSelectedPoster] = useState(null);
   const [selectedSport, setSelectedSport] = useState('All');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState('date');
+  const [viewMode, setViewMode] = useState('grid');
+  const [savedEvents, setSavedEvents] = useState(new Set());
+  const [hoveredCard, setHoveredCard] = useState(null);
+  const [expandedCard, setExpandedCard] = useState(null);
+  const [filterOpen, setFilterOpen] = useState(false);
   const navigate = useNavigate();
 
   const sports = ['All', 'Kabaddi', 'Cricket', 'Volleyball', 'Tennis', 'Badminton', 'Others'];
 
-  const filteredEvents = selectedSport === 'All' 
-    ? events 
-    : events.filter(event => event.sportName && event.sportName.toLowerCase() === selectedSport.toLowerCase());
+  const filteredAndSortedEvents = events
+    .filter(event => {
+      const matchesSport = selectedSport === 'All' || 
+        (event.sportName && event.sportName.toLowerCase() === selectedSport.toLowerCase());
+      const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (event.place && event.place.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (event.sportName && event.sportName.toLowerCase().includes(searchTerm.toLowerCase()));
+      return matchesSport && matchesSearch;
+    })
+    .sort((a, b) => {
+      if (sortBy === 'date') {
+        return new Date(a.date) - new Date(b.date);
+      } else if (sortBy === 'title') {
+        return a.title.localeCompare(b.title);
+      } else if (sortBy === 'popularity') {
+        return (b.views || 0) - (a.views || 0);
+      }
+      return 0;
+    });
 
   const openModal = (poster) => {
     setSelectedPoster(poster);
@@ -40,58 +75,470 @@ const Events = ({ events = [] }) => {
     setSelectedPoster(null);
   };
 
+  const toggleSave = (eventId) => {
+    const newSavedEvents = new Set(savedEvents);
+    if (newSavedEvents.has(eventId)) {
+      newSavedEvents.delete(eventId);
+    } else {
+      newSavedEvents.add(eventId);
+    }
+    setSavedEvents(newSavedEvents);
+  };
+
+  const handleCardClick = (event) => {
+    if (expandedCard === event._id) {
+      setExpandedCard(null);
+    } else {
+      setExpandedCard(event._id);
+    }
+  };
+
+  const getDaysUntilEvent = (eventDate) => {
+    const today = new Date();
+    const event = new Date(eventDate);
+    const diffTime = event - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  const getEventStatus = (eventDate) => {
+    const days = getDaysUntilEvent(eventDate);
+    if (days < 0) return { text: 'Event Ended', class: 'ended', color: '#FF6B6B' };
+    if (days === 0) return { text: 'Today', class: 'today', color: '#FFD93D' };
+    if (days === 1) return { text: 'Tomorrow', class: 'tomorrow', color: '#6BCF7F' };
+    if (days <= 7) return { text: `${days} days`, class: 'soon', color: '#4ECDC4' };
+    return { text: `${days} days`, class: 'upcoming', color: '#A8E6CF' };
+  };
+
+  const getStatsData = () => {
+    const today = new Date();
+    const upcoming = events.filter(e => new Date(e.date) > today).length;
+    const todayEvents = events.filter(e => {
+      const eventDate = new Date(e.date);
+      return eventDate.toDateString() === today.toDateString();
+    }).length;
+    
+    return {
+      total: events.length,
+      upcoming,
+      today: todayEvents
+    };
+  };
+
+  const stats = getStatsData();
+
   return (
     <>
-      <div className="events-page">
-        <div className="upcoming-events">
-          <h1>Upcoming Sports Events</h1>
-          <div className="sport-filters">
-            {sports.map(sport => (
-              <button 
-                key={sport}
-                className={`filter-btn ${selectedSport === sport ? 'active' : ''}`}
-                onClick={() => setSelectedSport(sport)}
-              >
-                {sport}
-              </button>
-            ))}
+      <div className="events-page-modern">
+        {/* Hero Section */}
+        <section className="hero-section">
+          <div className="hero-background">
+            <div className="gradient-orb orb-1"></div>
+            <div className="gradient-orb orb-2"></div>
+            <div className="gradient-orb orb-3"></div>
           </div>
-          <div className="event-list">
-            {filteredEvents.map((event, index) => (
-              <div key={event._id || index} className="event-item" style={{ animationDelay: `${index * 0.1}s` }}>
-                <div className="event-content">
-                  <h2>{iconMap[event.icon]} {event.title}</h2>
-                  <p><strong>Sport:</strong> {event.sportName}</p>
-                  <p><FaCalendarAlt className="event-icon" /> <strong>Date:</strong> {new Date(event.date).toLocaleDateString()}</p>
-                  <p><strong>Timings:</strong> {event.timings}</p>
-                  <p><FaMapMarkerAlt className="event-icon" /> <strong>Place:</strong> {event.place}</p>
-                  <p><FaListUl className="event-icon" /> <strong>Rules:</strong> {event.rules}</p>
-                  {event.prizes && Object.values(event.prizes).some(p => p) && (
-                    <div className="event-prizes">
-                      <h4><FaTrophy className="event-icon" /> Prizes</h4>
-                      <div className="prize-list">
-                        {Object.entries(event.prizes).map(([rank, prize]) => (
-                          prize && (
-                            <div className="prize-ribbon" key={rank}>
-                              <span className="prize-rank">{prizeIconMap[rank]} {rank}</span>
-                              <span className="prize-amount">{prize}</span>
-                            </div>
-                          )
-                        ))}
-                      </div>
-                    </div>
-                  )}
+          
+          <div className="hero-content">
+            <div className="hero-header">
+              <div className="hero-title">
+                <div className="title-badge">
+                  <FaBolt className="badge-icon" />
+                  <span>SPORTS HUB</span>
                 </div>
-                <div className="event-poster-container">
-                  <img src={`${API}${event.poster}`} alt={`${event.title} Poster`} className="event-poster" onClick={() => openModal(`${API}${event.poster}`)} />
+                <h1>
+                  <span className="title-main">Championship</span>
+                  <span className="title-sub">Events</span>
+                </h1>
+                <p className="hero-description">
+                  Discover and join the most exciting sports competitions in your area
+                </p>
+              </div>
+              
+              <div className="hero-actions">
+                <div className="view-switcher">
+                  <button 
+                    className={`view-btn ${viewMode === 'grid' ? 'active' : ''}`}
+                    onClick={() => setViewMode('grid')}
+                    title="Grid View"
+                  >
+                    <FaTh />
+                  </button>
+                  <button 
+                    className={`view-btn ${viewMode === 'list' ? 'active' : ''}`}
+                    onClick={() => setViewMode('list')}
+                    title="List View"
+                  >
+                    <FaList />
+                  </button>
                 </div>
               </div>
-            ))}
+            </div>
+
+            {/* Stats Cards */}
+            <div className="stats-grid">
+              <div className="stat-card-modern">
+                <div className="stat-icon-wrapper total">
+                  <FaFlag />
+                </div>
+                <div className="stat-content">
+                  <span className="stat-number">{stats.total}</span>
+                  <span className="stat-label">Total Events</span>
+                </div>
+              </div>
+              
+              <div className="stat-card-modern">
+                <div className="stat-icon-wrapper upcoming">
+                  <FaCalendarDay />
+                </div>
+                <div className="stat-content">
+                  <span className="stat-number">{stats.upcoming}</span>
+                  <span className="stat-label">Upcoming</span>
+                </div>
+              </div>
+              
+              <div className="stat-card-modern">
+                <div className="stat-icon-wrapper today">
+                  <FaBolt />
+                </div>
+                <div className="stat-content">
+                  <span className="stat-number">{stats.today}</span>
+                  <span className="stat-label">Today</span>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+        </section>
+
+        {/* Advanced Filter Section */}
+        <section className="filter-section">
+          <div className="filter-header">
+            <button 
+              className="filter-toggle"
+              onClick={() => setFilterOpen(!filterOpen)}
+            >
+              <FaFilter />
+              <span>Filters</span>
+              <FaChevronRight className={`chevron ${filterOpen ? 'open' : ''}`} />
+            </button>
+          </div>
+          
+          <div className={`filter-content ${filterOpen ? 'open' : ''}`}>
+            <div className="filter-row">
+              <div className="search-wrapper">
+                <div className="search-input-modern">
+                  <FaSearch className="search-icon" />
+                  <input
+                    type="text"
+                    placeholder="Search events, sports, or locations..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="search-field"
+                  />
+                </div>
+              </div>
+              
+              <div className="filter-controls">
+                <div className="sport-filter">
+                  <div className="filter-label">
+                    <FaTags />
+                    <span>Sports</span>
+                  </div>
+                  <div className="sport-chips">
+                    {sports.map(sport => (
+                      <button 
+                        key={sport}
+                        className={`sport-chip ${selectedSport === sport ? 'active' : ''}`}
+                        onClick={() => setSelectedSport(sport)}
+                      >
+                        {sportIcons[sport]?.icon || '🏆'}
+                        <span>{sport}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                <div className="sort-control">
+                  <div className="sort-select-wrapper">
+                    <FaChartLine className="sort-icon" />
+                    <select 
+                      value={sortBy} 
+                      onChange={(e) => setSortBy(e.target.value)}
+                      className="sort-select-modern"
+                    >
+                      <option value="date">📅 Sort by Date</option>
+                      <option value="title">🔤 Sort by Name</option>
+                      <option value="popularity">🔥 Sort by Popular</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Events Display Area */}
+        <section className="events-section">
+          {filteredAndSortedEvents.length === 0 ? (
+            <div className="empty-state-modern">
+              <div className="empty-illustration">
+                <div className="empty-icon">
+                  <FaSearch />
+                </div>
+                <div className="empty-dots">
+                  <span></span>
+                  <span></span>
+                  <span></span>
+                </div>
+              </div>
+              <h3>No Events Found</h3>
+              <p>Try adjusting your search criteria or browse all sports</p>
+              <button 
+                className="reset-filters-btn"
+                onClick={() => {
+                  setSelectedSport('All');
+                  setSearchTerm('');
+                  setSortBy('date');
+                }}
+              >
+                <FaArrowRight />
+                Reset All Filters
+              </button>
+            </div>
+          ) : (
+            <div className={`events-grid ${viewMode}`}>
+              {filteredAndSortedEvents.map((event, index) => {
+                const status = getEventStatus(event.date);
+                const isSaved = savedEvents.has(event._id);
+                const isHovered = hoveredCard === event._id;
+                const isExpanded = expandedCard === event._id;
+                const sportInfo = sportIcons[event.sportName] || sportIcons['Others'];
+                
+                return (
+                  <div 
+                    key={event._id || index} 
+                    className={`event-card-modern ${isHovered ? 'hovered' : ''} ${isExpanded ? 'expanded' : ''}`}
+                    style={{ animationDelay: `${index * 0.1}s` }}
+                    onMouseEnter={() => setHoveredCard(event._id)}
+                    onMouseLeave={() => setHoveredCard(null)}
+                  >
+                    {/* Card Header */}
+                    <div className="card-header-modern">
+                      <div className="sport-indicator">
+                        <div className="sport-icon" style={{ backgroundColor: sportInfo.color }}>
+                          <span>{sportInfo.icon}</span>
+                        </div>
+                        <div className="sport-info">
+                          <span className="sport-name">{event.sportName}</span>
+                          <span className="event-category">Competition</span>
+                        </div>
+                      </div>
+                      
+                      <div className="card-actions-modern">
+                        <div className="status-indicator" style={{ color: status.color }}>
+                          <div className="status-dot" style={{ backgroundColor: status.color }}></div>
+                          <span>{status.text}</span>
+                        </div>
+                        
+                        <div className="action-buttons">
+                          <button 
+                            className={`action-btn-modern save ${isSaved ? 'saved' : ''}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleSave(event._id);
+                            }}
+                            title="Save Event"
+                          >
+                            <FaBookmark />
+                          </button>
+                          <button 
+                            className="action-btn-modern share"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Share functionality
+                            }}
+                            title="Share Event"
+                          >
+                            <FaShareAlt />
+                          </button>
+                          <button 
+                            className="action-btn-modern expand"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCardClick(event);
+                            }}
+                            title={isExpanded ? "Collapse" : "Expand"}
+                          >
+                            {isExpanded ? <FaCompress /> : <FaExpand />}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Event Visual */}
+                    <div className="event-visual-modern" onClick={() => openModal(`${API}${event.poster}`)}>
+                      <div className="poster-wrapper">
+                        <img 
+                          src={`${API}${event.poster}`} 
+                          alt={event.title}
+                          className="event-poster-modern"
+                        />
+                        <div className="poster-overlay-modern">
+                          <div className="overlay-content">
+                            <div className="view-info">
+                              <FaEye />
+                              <span>{event.views || 0} views</span>
+                            </div>
+                            <div className="expand-hint">
+                              <FaExpand />
+                              <span>Click to expand</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Event Content */}
+                    <div className="card-content-modern">
+                      <div className="event-title-section">
+                        <h3 className="event-title-modern">{event.title}</h3>
+                        <div className="event-meta-modern">
+                          <div className="meta-item-modern">
+                            <FaCalendarAlt className="meta-icon-modern" />
+                            <div className="meta-content">
+                              <span className="meta-label">Date</span>
+                              <span className="meta-value">{new Date(event.date).toLocaleDateString('en-US', { 
+                                weekday: 'short', 
+                                year: 'numeric', 
+                                month: 'short', 
+                                day: 'numeric' 
+                              })}</span>
+                            </div>
+                          </div>
+                          
+                          <div className="meta-item-modern">
+                            <FaClock className="meta-icon-modern" />
+                            <div className="meta-content">
+                              <span className="meta-label">Time</span>
+                              <span className="meta-value">
+                                {new Date(event.date).toLocaleTimeString('en-US', { 
+                                  hour: '2-digit', 
+                                  minute: '2-digit',
+                                  hour12: true 
+                                })}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <div className="meta-item-modern">
+                            <FaLocationArrow className="meta-icon-modern" />
+                            <div className="meta-content">
+                              <span className="meta-label">Location</span>
+                              <span className="meta-value">{event.place}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Event Details (shown when expanded) */}
+                      {isExpanded && (
+                        <div className="event-details-expanded">
+                          <div className="detail-section">
+                            <div className="detail-header">
+                              <FaInfoCircle />
+                              <span>Event Details</span>
+                            </div>
+                            <div className="detail-content">
+                              <div className="detail-row">
+                                <span className="detail-label">Sport:</span>
+                                <span className="detail-value">{event.sportName}</span>
+                              </div>
+                              <div className="detail-row">
+                                <span className="detail-label">Date:</span>
+                                <span className="detail-value">
+                                  {new Date(event.date).toLocaleDateString('en-US', { 
+                                    weekday: 'long',
+                                    year: 'numeric', 
+                                    month: 'long', 
+                                    day: 'numeric' 
+                                  })}
+                                </span>
+                              </div>
+                              <div className="detail-row">
+                                <span className="detail-label">Time:</span>
+                                <span className="detail-value">
+                                  {new Date(event.date).toLocaleTimeString('en-US', { 
+                                    hour: '2-digit', 
+                                    minute: '2-digit',
+                                    hour12: true 
+                                  })}
+                                </span>
+                              </div>
+                              <div className="detail-row">
+                                <span className="detail-label">Location:</span>
+                                <span className="detail-value">{event.place}</span>
+                              </div>
+                              <div className="detail-row">
+                                <span className="detail-label">Rules:</span>
+                                <span className="detail-value">{event.rules}</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Prize Section */}
+                          {event.prizes && Object.values(event.prizes).some(p => p) && (
+                            <div className="prize-section-modern">
+                              <div className="prize-header-modern">
+                                <FaTrophy />
+                                <span>Complete Prize Distribution</span>
+                              </div>
+                              <div className="prize-grid-modern">
+                                {Object.entries(event.prizes).map(([rank, prize]) => (
+                                  prize && (
+                                    <div className="prize-card-modern" key={rank}>
+                                      <div className="prize-rank">
+                                        <span className="prize-icon">{prizeIcons[rank]?.icon}</span>
+                                        <span className="rank-text">{rank}</span>
+                                      </div>
+                                      <div className="prize-amount">{prize}</div>
+                                    </div>
+                                  )
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Prize Preview - Show All Prizes */}
+                      {!isExpanded && event.prizes && Object.values(event.prizes).some(p => p) && (
+                        <div className="prize-preview">
+                          <div className="prize-preview-header">
+                            <FaTrophy />
+                            <span>Prize Distribution</span>
+                          </div>
+                          <div className="prize-preview-items">
+                            {Object.entries(event.prizes).map(([rank, prize]) => (
+                              prize && (
+                                <div className="prize-preview-item" key={rank}>
+                                  <span>{prizeIcons[rank]?.icon}</span>
+                                  <span>{prize}</span>
+                                </div>
+                              )
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
       </div>
+      
       <Modal show={isModalOpen} onClose={closeModal}>
-        {selectedPoster && <img src={selectedPoster} alt="Enlarged event poster" />}
+        {selectedPoster && <img src={selectedPoster} alt="Event poster" />}
       </Modal>
     </>
   );
