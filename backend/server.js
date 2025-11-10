@@ -18,10 +18,7 @@ app.use(express.urlencoded({ limit: '200mb', extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Database Connection
-mongoose.connect('mongodb+srv://Abhi:abhi123@cluster0.worzt4m.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-}).then(() => {
+mongoose.connect('mongodb+srv://Abhi:abhi123@cluster0.worzt4m.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0').then(() => {
   console.log('MongoDB connected successfully');
 }).catch(err => {
   console.error('MongoDB connection error:', err);
