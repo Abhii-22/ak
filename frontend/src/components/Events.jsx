@@ -11,7 +11,8 @@ import {
 } from 'react-icons/fa';
 import './Events.css';
 import Modal from './Modal';
-const API = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001';
+import { API_BASE_URL } from '../config/api.js';
+const API = API_BASE_URL;
 
 const sportIcons = {
   'Kabaddi': { icon: '🤼', color: '#FF6B6B' },
@@ -45,20 +46,39 @@ const Events = ({ events = [] }) => {
 
   const sports = ['All', 'Kabaddi', 'Cricket', 'Volleyball', 'Tennis', 'Badminton', 'Others'];
 
+  // Add useEffect to log events when they change
+  useEffect(() => {
+    console.log('Events component received events:', events);
+    if (events && events.length > 0) {
+      console.log('First event sample:', events[0]);
+    }
+  }, [events]);
+
   const filteredAndSortedEvents = events
     .filter(event => {
+      // Validate event has required fields
+      if (!event || !event._id || !event.title) {
+        return false;
+      }
+      
       const matchesSport = selectedSport === 'All' || 
         (event.sportName && event.sportName.toLowerCase() === selectedSport.toLowerCase());
-      const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      const matchesSearch = !searchTerm || (
+        (event.title && event.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
         (event.place && event.place.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (event.sportName && event.sportName.toLowerCase().includes(searchTerm.toLowerCase()));
+        (event.sportName && event.sportName.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
       return matchesSport && matchesSearch;
     })
     .sort((a, b) => {
       if (sortBy === 'date') {
-        return new Date(a.date) - new Date(b.date);
+        const dateA = a.date ? new Date(a.date) : new Date(0);
+        const dateB = b.date ? new Date(b.date) : new Date(0);
+        return dateA - dateB;
       } else if (sortBy === 'title') {
-        return a.title.localeCompare(b.title);
+        const titleA = a.title || '';
+        const titleB = b.title || '';
+        return titleA.localeCompare(titleB);
       } else if (sortBy === 'popularity') {
         return (b.views || 0) - (a.views || 0);
       }
@@ -375,67 +395,81 @@ const Events = ({ events = [] }) => {
                     </div>
 
                     {/* Event Visual */}
-                    <div className="event-visual-modern" onClick={() => openModal(`${API}${event.poster}`)}>
-                      <div className="poster-wrapper">
-                        <img 
-                          src={`${API}${event.poster}`} 
-                          alt={event.title}
-                          className="event-poster-modern"
-                        />
-                        <div className="poster-overlay-modern">
-                          <div className="overlay-content">
-                            <div className="view-info">
-                              <FaEye />
-                              <span>{event.views || 0} views</span>
-                            </div>
-                            <div className="expand-hint">
-                              <FaExpand />
-                              <span>Click to expand</span>
+                    {event.poster && (
+                      <div className="event-visual-modern" onClick={() => openModal(`${API}${event.poster}`)}>
+                        <div className="poster-wrapper">
+                          <img 
+                            src={`${API}${event.poster}`} 
+                            alt={event.title || 'Event poster'}
+                            className="event-poster-modern"
+                            onError={(e) => {
+                              console.error('Failed to load event poster:', event.poster);
+                              e.target.src = 'https://via.placeholder.com/400x300?text=No+Image';
+                            }}
+                          />
+                          <div className="poster-overlay-modern">
+                            <div className="overlay-content">
+                              <div className="view-info">
+                                <FaEye />
+                                <span>{event.views || 0} views</span>
+                              </div>
+                              <div className="expand-hint">
+                                <FaExpand />
+                                <span>Click to expand</span>
+                              </div>
                             </div>
                           </div>
                         </div>
                       </div>
-                    </div>
+                    )}
 
                     {/* Event Content */}
                     <div className="card-content-modern">
                       <div className="event-title-section">
                         <h3 className="event-title-modern">{event.title}</h3>
                         <div className="event-meta-modern">
-                          <div className="meta-item-modern">
-                            <FaCalendarAlt className="meta-icon-modern" />
-                            <div className="meta-content">
-                              <span className="meta-label">Date</span>
-                              <span className="meta-value">{new Date(event.date).toLocaleDateString('en-US', { 
-                                weekday: 'short', 
-                                year: 'numeric', 
-                                month: 'short', 
-                                day: 'numeric' 
-                              })}</span>
-                            </div>
-                          </div>
+                          {event.date && (
+                            <>
+                              <div className="meta-item-modern">
+                                <FaCalendarAlt className="meta-icon-modern" />
+                                <div className="meta-content">
+                                  <span className="meta-label">Date</span>
+                                  <span className="meta-value">
+                                    {event.date ? new Date(event.date).toLocaleDateString('en-US', { 
+                                      weekday: 'short', 
+                                      year: 'numeric', 
+                                      month: 'short', 
+                                      day: 'numeric' 
+                                    }) : 'TBA'}
+                                  </span>
+                                </div>
+                              </div>
+                              
+                              <div className="meta-item-modern">
+                                <FaClock className="meta-icon-modern" />
+                                <div className="meta-content">
+                                  <span className="meta-label">Time</span>
+                                  <span className="meta-value">
+                                    {event.date ? new Date(event.date).toLocaleTimeString('en-US', { 
+                                      hour: '2-digit', 
+                                      minute: '2-digit',
+                                      hour12: true 
+                                    }) : 'TBA'}
+                                  </span>
+                                </div>
+                              </div>
+                            </>
+                          )}
                           
-                          <div className="meta-item-modern">
-                            <FaClock className="meta-icon-modern" />
-                            <div className="meta-content">
-                              <span className="meta-label">Time</span>
-                              <span className="meta-value">
-                                {new Date(event.date).toLocaleTimeString('en-US', { 
-                                  hour: '2-digit', 
-                                  minute: '2-digit',
-                                  hour12: true 
-                                })}
-                              </span>
+                          {event.place && (
+                            <div className="meta-item-modern">
+                              <FaLocationArrow className="meta-icon-modern" />
+                              <div className="meta-content">
+                                <span className="meta-label">Location</span>
+                                <span className="meta-value">{event.place}</span>
+                              </div>
                             </div>
-                          </div>
-                          
-                          <div className="meta-item-modern">
-                            <FaLocationArrow className="meta-icon-modern" />
-                            <div className="meta-content">
-                              <span className="meta-label">Location</span>
-                              <span className="meta-value">{event.place}</span>
-                            </div>
-                          </div>
+                          )}
                         </div>
                       </div>
 

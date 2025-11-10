@@ -1,12 +1,16 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useAuth } from '../context/AuthContext';
 import './UploadModal.css';
-const API = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5001';
+import { API_BASE_URL } from '../config/api.js';
+const API = API_BASE_URL;
 
 const UploadModal = ({ onClose, onUploadSuccess }) => {
+  const { token } = useAuth();
   const [file, setFile] = useState(null);
   const [title, setTitle] = useState('');
   const [error, setError] = useState('');
+  const [uploading, setUploading] = useState(false);
 
   const handleFileChange = (e) => {
     const selectedFile = e.target.files[0];
@@ -17,23 +21,44 @@ const UploadModal = ({ onClose, onUploadSuccess }) => {
   };
 
   const handleSubmit = async () => {
-    if (file) {
-      const formData = new FormData();
-      formData.append('media', file);
-      formData.append('title', title);
+    if (!file) {
+      setError('Please select a file');
+      return;
+    }
 
-      try {
-        await axios.post(`${API}/api/posts`, formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
+    if (!token) {
+      setError('You must be logged in to upload');
+      return;
+    }
+
+    setUploading(true);
+    setError('');
+    
+    const formData = new FormData();
+    formData.append('media', file);
+    formData.append('title', title);
+
+    try {
+      const response = await axios.post(`${API}/api/posts`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          'x-auth-token': token,
+        },
+      });
+      console.log('Post uploaded successfully:', response.data);
+      if (onUploadSuccess) {
         onUploadSuccess();
-        onClose();
-      } catch (err) {
-        console.error('Failed to upload post', err);
-        setError('Upload failed. Please try again.');
       }
+      onClose();
+    } catch (err) {
+      console.error('Failed to upload post', err);
+      if (err.response) {
+        setError(err.response.data?.msg || 'Upload failed. Please try again.');
+      } else {
+        setError('Upload failed. Please check your connection and try again.');
+      }
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -51,8 +76,10 @@ const UploadModal = ({ onClose, onUploadSuccess }) => {
         <input type="file" accept="image/*,video/*" onChange={handleFileChange} />
         {error && <p className="error-message">{error}</p>}
         <div className="modal-actions">
-          <button onClick={handleSubmit} disabled={!file}>Submit</button>
-          <button onClick={onClose}>Cancel</button>
+          <button onClick={handleSubmit} disabled={!file || uploading}>
+            {uploading ? 'Uploading...' : 'Submit'}
+          </button>
+          <button onClick={onClose} disabled={uploading}>Cancel</button>
         </div>
       </div>
     </div>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import axios from 'axios';
+import { API_BASE_URL } from './config/api.js';
 import './App.css';
 import Header from './components/Header';
 import BottomNav from './components/BottomNav';
@@ -12,7 +13,7 @@ import SignUp from './components/SignUp';
 import Events from './components/Events';
 import UploadEventForm from './components/UploadEventForm';
 import ChampionsPage from './components/ChampionsPage';
-import Profile from './components/Profile'; // Import Profile component
+import Profile from './components/Profile';
 import { AuthProvider } from './context/AuthContext';
 import Contact from './components/Contact';
 
@@ -21,93 +22,62 @@ const AppLayout = () => {
   const { currentUser } = useAuth();
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [events, setEvents] = useState([]);
-  const API = 'http://localhost:5001'; // Force API URL to port 5001
+  const [reels, setReels] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const API = API_BASE_URL;
 
   useEffect(() => {
-    const fetchEvents = async () => {
+    const fetchData = async () => {
+      setLoading(true);
       try {
-        const res = await axios.get(`${API}/api/events`);
+        // Fetch events
+        const eventsRes = await axios.get(`${API}/api/events`);
+        if (eventsRes.data && Array.isArray(eventsRes.data)) {
+          setEvents(eventsRes.data);
+          console.log(`Loaded ${eventsRes.data.length} events`);
+        }
+
+        // Fetch posts
+        const postsRes = await axios.get(`${API}/api/posts`);
+        if (postsRes.data && Array.isArray(postsRes.data)) {
+          const transformedReels = postsRes.data.map(post => ({
+            id: post._id,
+            src: `${API}${post.mediaUrl}`,
+            type: post.mediaType || 'image/jpeg',
+            likes: post.likes || 0,
+            uploadedBy: post.user || { name: 'Anonymous' }
+          })).filter(reel => reel.src);
+          setReels(transformedReels);
+          console.log(`Loaded ${transformedReels.length} posts`);
+        }
+      } catch (error) {
+        console.error('Failed to fetch data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [API]);
+
+  const addEvent = async (newEvent) => {
+    try {
+      const res = await axios.get(`${API}/api/events`);
+      if (res.data && Array.isArray(res.data)) {
         setEvents(res.data);
-      } catch (error) {
-        console.error('Failed to fetch events', error);
+        console.log(`Refreshed: ${res.data.length} events loaded`);
       }
-    };
-
-    const fetchAllPosts = async () => {
-      try {
-        const res = await axios.get(`${API}/api/posts`);
-        // Transform posts into reels for the ChampionsPage
-        const transformedReels = res.data.map(post => ({
-          id: post._id,
-          src: `${API}${post.mediaUrl}`,
-          type: post.mediaType,
-          likes: post.likes || 0,
-          liked: currentUser && post.likedBy?.some(likedUser => 
-            likedUser._id === currentUser._id || likedUser.toString() === currentUser._id
-          ) || false,
-          uploadedBy: post.user ? {
-            name: post.user.name,
-            email: post.user.email,
-            profilePictureUrl: post.user.profilePictureUrl
-          } : {
-            name: 'Unknown User',
-            email: '',
-            profilePictureUrl: 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?q=80&w=1780&auto=format&fit=crop'
-          }
-        }));
-        setReels(transformedReels);
-      } catch (error) {
-        console.error('Failed to fetch all posts', error);
-      }
-    };
-
-    fetchEvents();
-    fetchAllPosts();
-  }, [API, currentUser]);
-  const [reels, setReels] = useState([]);
-
-  const addEvent = (newEvent) => {
-    setEvents(prevEvents => [...prevEvents, { ...newEvent, id: prevEvents.length + 1 }]);
-    setShowUploadForm(false); // Hide form after submission
-  };
-
-  const addReel = (file) => {
-    const newId = `item-${Date.now()}`;
-    const newUrl = URL.createObjectURL(file);
-
-    // Add to events for profile posts
-    const newPost = {
-      id: newId,
-      poster: newUrl,
-      title: file.name,
-      date: new Date().toLocaleDateString(),
-      uploadedBy: currentUser ? currentUser.email : '',
-    };
-    setEvents(prevEvents => [newPost, ...prevEvents]);
-
-    // Add to reels for the reels page
-    const newReel = {
-      id: newId,
-      src: newUrl,
-      type: file.type,
-      likes: 0,
-      liked: false,
-      uploadedBy: {
-        name: currentUser?.name || 'Unknown User',
-        email: currentUser?.email || '',
-        profilePictureUrl: currentUser?.profilePictureUrl || 'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?q=80&w=1780&auto=format&fit=crop'
-      }
-    };
-    setReels(prevReels => [newReel, ...prevReels]);
+    } catch (error) {
+      console.error('Failed to refresh events:', error);
+    }
+    setShowUploadForm(false);
   };
 
   const handleLike = async (reelId) => {
     try {
-      // Find the current reel to check if it's liked
       const currentReel = reels.find(reel => reel.id === reelId);
       if (!currentReel) return;
 
-      // Make API call to like/unlike
       const endpoint = currentReel.liked ? 'unlike' : 'like';
       const response = await axios.put(`${API}/api/posts/${reelId}/${endpoint}`, {}, {
         headers: {
@@ -115,7 +85,6 @@ const AppLayout = () => {
         }
       });
 
-      // Update reels state with response data
       setReels(reels.map(reel => {
         if (reel.id === reelId) {
           return { 
@@ -128,7 +97,6 @@ const AppLayout = () => {
       }));
     } catch (error) {
       console.error('Failed to like/unlike post:', error);
-      // Fallback to frontend-only update if API fails
       setReels(reels.map(reel => {
         if (reel.id === reelId) {
           return { ...reel, liked: !reel.liked, likes: reel.liked ? reel.likes - 1 : reel.likes + 1 };
@@ -137,6 +105,7 @@ const AppLayout = () => {
       }));
     }
   };
+
   const noNavRoutes = ['/', '/signin', '/signup'];
   const shouldShowNav = !noNavRoutes.includes(location.pathname);
 
@@ -153,7 +122,7 @@ const AppLayout = () => {
           <Route path="/upload" element={<UploadEventForm addEvent={addEvent} />} />
           <Route path="/reels" element={<ChampionsPage reels={reels} handleLike={handleLike} />} />
           <Route path="/contact" element={<Contact />} />
-          <Route path="/profile" element={<Profile events={events} addReel={addReel} />} />
+          <Route path="/profile" element={<Profile events={events} />} />
         </Routes>
       </main>
       {shouldShowNav && <BottomNav />}

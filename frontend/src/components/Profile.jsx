@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE_URL } from '../config/api.js';
 import UploadModal from './UploadModal';
 import EditProfileModal from './EditProfileModal';
 import './Profile.css';
@@ -19,7 +20,7 @@ const Profile = () => {
     posts: 0,
     totalLikes: 0
   });
-  const API = 'http://localhost:5001'; // Force API URL to port 5001
+  const API = API_BASE_URL;
 
   useEffect(() => {
     const fetchPosts = async (userId) => {
