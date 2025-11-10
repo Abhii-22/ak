@@ -18,7 +18,8 @@ app.use(express.urlencoded({ limit: '200mb', extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Database Connection
-mongoose.connect('mongodb+srv://Abhi:abhi123@cluster0.worzt4m.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0').then(() => {
+const mongoURI = process.env.MONGO_URI || 'mongodb+srv://Abhi:abhi123@cluster0.worzt4m.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+mongoose.connect(mongoURI).then(() => {
   console.log('MongoDB connected successfully');
 }).catch(err => {
   console.error('MongoDB connection error:', err);
@@ -29,6 +30,11 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/events', require('./routes/events'));
 app.use('/api/profile', require('./routes/profile'));
 app.use('/api/posts', require('./routes/post'));
+
+// Health check endpoint for Render
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'OK', message: 'Server is running' });
+});
 
 // Start Server
 app.listen(PORT, () => {

@@ -1,0 +1,15 @@
+services:
+  # Backend Service
+  - type: web
+    name: sportsclub-backend
+    env: node
+    plan: free
+    buildCommand: "npm install"
+    startCommand: "node server.js"
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: MONGO_URI
+        value: mongodb+srv://Abhi:abhi123@cluster0.worzt4m.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+      - key: PORT
+        value: 5001
